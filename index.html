@@ -6,6 +6,11 @@
     <title>Barcode Scanner</title>
     <script src="https://serratus.github.io/quaggaJS/examples/js/quagga.min.js"></script>
     <style>
+        html, body {
+            height: 100%;
+            overflow: hidden; /* Voorkomt scrollen als er extra witruimte is */
+        }
+        
         body { 
             text-align: center; 
             font-family: Arial, sans-serif; 
@@ -25,7 +30,8 @@
         #interactive {     
             width: 90%; 
             max-width: 500px; 
-            height: auto; 
+            height: 300px; /* Pas aan naar wens */
+            object-fit: cover; 
             margin: 10px auto; 
             border: 2px solid black; 
             border-radius: 8px; 
@@ -34,10 +40,6 @@
         #result {
             font-size: 18px;
             margin-top: 15px;
-            position: absolute;
-            top: 10%;
-            left: 50%;
-            transform: translate(-50%, -50%);
             background: white;
             padding: 8px 12px;
             border-radius: 5px;
