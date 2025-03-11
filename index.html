@@ -22,11 +22,22 @@
                 inputStream: {
                     name: "Live",
                     type: "LiveStream",
-                    target: document.querySelector("#interactive"), // Camera-feed
+                    target: document.querySelector("#interactive"),
+                    constraints: {
+                        width: { min: 640 },
+                        height: { min: 480 },
+                        facingMode: "environment", // Gebruik de achterste camera op mobiel
+                        aspectRatio: { min: 1, max: 2 }
+                    }
                 },
+
                 decoder: {
-                    readers: ["ean_reader"], // Ondersteunt EAN-13 barcodes
+                    readers: [
+                        "ean_reader", "upc_reader", "code_128_reader", "code_39_reader", 
+                        "i2of5_reader", "2of5_reader", "codabar_reader"
+                    ], 
                 },
+
             }, function (err) {
                 if (err) {
                     console.error("Quagga init error:", err);
@@ -36,14 +47,21 @@
             });
 
             // Barcode gevonden
+            Quagga.onProcessed(function (result) {
+                if (result && result.boxes) {
+                    document.getElementById("result").innerText = "Barcode aan het zoeken...";
+                }
+            });
+
             Quagga.onDetected(function (result) {
                 let barcode = result.codeResult.code;
-                console.log("Barcode gevonden:", barcode);
-                document.getElementById("result").innerText = `Barcode: ${barcode}`;
-
-                // Stuur barcode naar de Wix-site via postMessage
+                console.log("✅ Barcode gevonden:", barcode);
+                document.getElementById("result").innerText = `✅ Barcode: ${barcode}`;
                 window.parent.postMessage(barcode, "*");
-            });
+
+    // Stop de scanner na succesvolle detectie
+    Quagga.stop();
+});
         });
     </script>
 </body>
