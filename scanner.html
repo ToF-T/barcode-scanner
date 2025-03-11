@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barcode Scanner</title>
+    <script src="https://serratus.github.io/quaggaJS/examples/js/quagga.min.js"></script>
+    <style>
+        body { text-align: center; font-family: Arial, sans-serif; }
+        #interactive { width: 100%; max-width: 500px; margin: auto; }
+        #result { font-size: 20px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h2>Scan een barcode</h2>
+    <div id="interactive" class="viewport"></div>
+    <p id="result">Scan een product...</p>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            Quagga.init({
+                inputStream: {
+                    name: "Live",
+                    type: "LiveStream",
+                    target: document.querySelector("#interactive"), // Camera-feed
+                },
+                decoder: {
+                    readers: ["ean_reader"], // Ondersteunt EAN-13 barcodes
+                },
+            }, function (err) {
+                if (err) {
+                    console.error("Quagga init error:", err);
+                    return;
+                }
+                Quagga.start();
+            });
+
+            // Barcode gevonden
+            Quagga.onDetected(function (result) {
+                let barcode = result.codeResult.code;
+                console.log("Barcode gevonden:", barcode);
+                document.getElementById("result").innerText = `Barcode: ${barcode}`;
+
+                // Stuur barcode naar de Wix-site via postMessage
+                window.parent.postMessage(barcode, "*");
+            });
+        });
+    </script>
+</body>
+</html>
