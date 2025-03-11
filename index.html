@@ -7,16 +7,16 @@
     <script src="https://serratus.github.io/quaggaJS/examples/js/quagga.min.js"></script>
     <style>
         html, body {
-        height: 100%;
-        margin: 0;
-        padding: 0;
-        overflow: hidden; /* Geen onnodige scrollbalken */
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        background-color: #f8f8f8; /* Achtergrondkleur voor contrast */
-    }
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: #f8f8f8;
+        }
 
         h2 {
             margin-bottom: 10px;
@@ -26,13 +26,14 @@
         #interactive {     
             width: 90%; 
             max-width: 400px; 
-            height: auto; /* Pas aan naar wens */
+            min-width: 300px; /* Scanner wordt nooit te klein */
+            min-height: 200px; 
             aspect-ratio: 16 / 9;
-            object-fit: contain; 
+            object-fit: contain; /* Voorkomt bijsnijden en behoudt volledige weergave */
             margin: 10px auto; 
             border: 2px solid black; 
             border-radius: 8px;
-            background: black; /* Fix voor vreemde witte randen */
+            background: black;
         }
         
         #result {
@@ -66,7 +67,7 @@
                     constraints: {
                         width: { ideal: 1280 },
                         height: { ideal: 720 },
-                        facingMode: "environment", // Gebruik de achterste camera op mobiel
+                        facingMode: "environment",
                         aspectRatio: { min: 1, max: 3 }
                     }
                 },
@@ -76,10 +77,10 @@
                         "ean_reader", "upc_reader", "code_128_reader", "code_39_reader", 
                         "i2of5_reader", "2of5_reader", "codabar_reader"
                     ],
-                    multiple: false  // Zorgt ervoor dat er niet meerdere foutieve barcodes tegelijk worden gelezen
+                    multiple: false
                 },
-                locate: true, // Zorgt dat Quagga strenger zoekt naar barcodes
-                numOfWorkers: navigator.hardwareConcurrency || 4, // Gebruik meer rekenkracht als mogelijk
+                locate: true,
+                numOfWorkers: navigator.hardwareConcurrency || 4,
             }, function (err) {
                 if (err) {
                     console.error("Quagga init error:", err);
@@ -88,28 +89,24 @@
                 Quagga.start();
             });
 
-            // Barcode zoeken
             Quagga.onProcessed(function (result) {
                 if (result && result.boxes) {
                     document.getElementById("result").innerText = "Barcode aan het zoeken...";
                 }
             });
 
-            // Barcode gevonden
             Quagga.onDetected(function (result) {
                 let barcode = result.codeResult.code;
     
-                // Extra validatie: Zorg dat barcode minimaal 8 tekens heeft
                 if (barcode.length < 8) {
                     console.warn("Barcode te kort, genegeerd:", barcode);
-                    return; // Negeer te korte barcodes
+                    return;
                 }
 
                 console.log("✅ Barcode gevonden:", barcode);
                 document.getElementById("result").innerText = `✅ Barcode: ${barcode}`;
                 window.parent.postMessage(barcode, "*");
 
-                // Stop de scanner na succesvolle detectie
                 Quagga.stop();
             });
 
