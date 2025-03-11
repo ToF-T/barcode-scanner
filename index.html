@@ -24,8 +24,8 @@
                     type: "LiveStream",
                     target: document.querySelector("#interactive"),
                     constraints: {
-                        width: { min: 640 },
-                        height: { min: 480 },
+                        width: { min: 1280 },
+                        height: { min: 720 },
                         facingMode: "environment", // Gebruik de achterste camera op mobiel
                         aspectRatio: { min: 1, max: 2 }
                     }
@@ -35,9 +35,11 @@
                     readers: [
                         "ean_reader", "upc_reader", "code_128_reader", "code_39_reader", 
                         "i2of5_reader", "2of5_reader", "codabar_reader"
-                    ], 
+                    ],
+                    multiple: false  // Zorgt ervoor dat er niet meerdere foutieve barcodes tegelijk worden gelezen
                 },
-
+                locate: true, // Zorgt dat Quagga strenger zoekt naar barcodes
+                numOfWorkers: navigator.hardwareConcurrency || 4, // Gebruik meer rekenkracht als mogelijk
             }, function (err) {
                 if (err) {
                     console.error("Quagga init error:", err);
@@ -46,23 +48,33 @@
                 Quagga.start();
             });
 
-            // Barcode gevonden
+            // Barcode zoeken
             Quagga.onProcessed(function (result) {
                 if (result && result.boxes) {
                     document.getElementById("result").innerText = "Barcode aan het zoeken...";
                 }
             });
 
+            // Barcode gevonden
             Quagga.onDetected(function (result) {
                 let barcode = result.codeResult.code;
+    
+                // Extra validatie: Zorg dat barcode minimaal 8 tekens heeft
+                if (barcode.length < 8) {
+                    console.warn("Barcode te kort, genegeerd:", barcode);
+                    return; // Negeer te korte barcodes
+                }
+
                 console.log("✅ Barcode gevonden:", barcode);
                 document.getElementById("result").innerText = `✅ Barcode: ${barcode}`;
                 window.parent.postMessage(barcode, "*");
 
-    // Stop de scanner na succesvolle detectie
-    Quagga.stop();
-});
-        });
+                // Stop de scanner na succesvolle detectie
+                Quagga.stop();
+            });
+
+        }); 
     </script>
 </body>
 </html>
+
