@@ -22,25 +22,24 @@
             margin-bottom: 10px;
             font-size: 24px;
         }
-        
-        #interactive {     
-            width: 100%; 
+
+        #interactive {
+            width: 100%;
             max-width: 600px;
-            height: auto;
-            aspect-ratio: 16 / 9; /* Correcte beeldverhouding */
-            object-fit: contain; /* Zorgt dat het volledige beeld zichtbaar blijft zonder bijsnijden */
-            margin: 10px auto; 
-            border: 2px solid black; 
-            border-radius: 8px;
+            aspect-ratio: 16 / 9; /* Houdt beeldverhouding correct */
             background: black;
+            border: 2px solid black;
+            border-radius: 8px;
         }
 
         video {
-            width: 100%;
-            height: 100%;
-            object-fit: contain; /* Zorgt dat het camerabeeld goed wordt weergegeven */
+            width: 100% !important;
+            height: auto !important;
+            max-height: 100%;
+            aspect-ratio: 16 / 9;
+            object-fit: cover; /* Voorkomt zwarte randen en vervorming */
         }
-        
+
         #result {
             font-size: 18px;
             margin-top: 15px;
@@ -56,14 +55,14 @@
         }
     </style>
 </head>
-    
+
 <body>
     <h2>Scan een barcode</h2>
     <div id="interactive" class="viewport"></div>
     <p id="result">Scan een product...</p>
 
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
+        function startScanner() {
             Quagga.init({
                 inputStream: {
                     name: "Live",
@@ -72,14 +71,13 @@
                     constraints: {
                         width: { ideal: 1280 },
                         height: { ideal: 720 },
-                        facingMode: "environment",
-                        aspectRatio: { ideal: 1.7777777778 } // Voorkomt langwerpige of ingezoomde weergave
+                        facingMode: { ideal: "environment" },
+                        aspectRatio: 1.7777777778 // Zorgt voor correcte beeldverhouding
                     }
                 },
-
                 decoder: {
                     readers: [
-                        "ean_reader", "upc_reader", "code_128_reader", "code_39_reader", 
+                        "ean_reader", "upc_reader", "code_128_reader", "code_39_reader",
                         "i2of5_reader", "2of5_reader", "codabar_reader"
                     ],
                     multiple: false
@@ -102,7 +100,7 @@
 
             Quagga.onDetected(function (result) {
                 let barcode = result.codeResult.code;
-    
+                
                 if (barcode.length < 8) {
                     console.warn("Barcode te kort, genegeerd:", barcode);
                     return;
@@ -113,9 +111,13 @@
                 window.parent.postMessage(barcode, "*");
 
                 Quagga.stop();
+                
+                // Start opnieuw na 1 seconde om het beeld correct te laden
+                setTimeout(startScanner, 1000);
             });
+        }
 
-        }); 
+        document.addEventListener("DOMContentLoaded", startScanner);
     </script>
 </body>
 </html>
