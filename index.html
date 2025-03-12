@@ -17,29 +17,25 @@
             align-items: center;
             background-color: #f8f8f8;
         }
-
         h2 {
             margin-bottom: 10px;
             font-size: 24px;
         }
-
         #interactive {
             width: 100%;
             max-width: 600px;
-            aspect-ratio: 16 / 9; /* Houdt beeldverhouding correct */
+            aspect-ratio: 16 / 9;
             background: black;
             border: 2px solid black;
             border-radius: 8px;
         }
-
         video {
             width: 100% !important;
             height: auto !important;
             max-height: 100%;
             aspect-ratio: 16 / 9;
-            object-fit: cover; /* Voorkomt zwarte randen en vervorming */
+            object-fit: cover;
         }
-
         #result {
             font-size: 18px;
             margin-top: 15px;
@@ -55,7 +51,6 @@
         }
     </style>
 </head>
-
 <body>
     <h2>Scan een barcode</h2>
     <div id="interactive" class="viewport"></div>
@@ -72,13 +67,9 @@
                         width: { ideal: 1280 },
                         height: { ideal: 720 },
                         facingMode: { ideal: "environment" },
-                        aspectRatio: 1.7777777778 // Zorgt voor correcte beeldverhouding
+                        aspectRatio: 1.7777777778
                     }
                 },
-                    locator: {
-                        halfSample: true, // Verbetert prestaties op Mac
-                        patchSize: "medium", // Alternatief: "large" voor trager en nauwkeuriger scannen
-                    },
                 decoder: {
                     readers: [
                         "ean_reader", "upc_reader", "code_128_reader", "code_39_reader",
@@ -96,28 +87,32 @@
                 Quagga.start();
             });
 
-            Quagga.onProcessed(function (result) {
-                if (result && result.boxes) {
-                    document.getElementById("result").innerText = "Barcode aan het zoeken...";
-                }
-            });
+            let scanBuffer = [];
+            let requiredMatches = 5; // Barcode moet 5x correct gelezen worden
 
             Quagga.onDetected(function (result) {
                 let barcode = result.codeResult.code;
-                
-                if (barcode.length < 8) {
-                    console.warn("Barcode te kort, genegeerd:", barcode);
-                    return;
+                scanBuffer.push(barcode);
+
+                if (scanBuffer.length > requiredMatches) {
+                    scanBuffer.shift();
                 }
 
-                console.log("✅ Barcode gevonden:", barcode);
-                document.getElementById("result").innerText = `✅ Barcode: ${barcode}`;
-                window.parent.postMessage(barcode, "*");
+                let allSame = scanBuffer.every(code => code === barcode);
+                if (allSame && scanBuffer.length === requiredMatches) {
+                    console.log("✅ Barcode bevestigd:", barcode);
+                    document.getElementById("result").innerText = `✅ Barcode: ${barcode}`;
+                    window.parent.postMessage(barcode, "*");
 
-                Quagga.stop();
-                
-                // Start opnieuw na 1 seconde om het beeld correct te laden
-                setTimeout(startScanner, 1000);
+                    // Scanner stoppen en herstartknop tonen
+                    Quagga.stop();
+                    scanBuffer = [];
+
+                    // Knop toevoegen om opnieuw te scannen
+                    document.getElementById("result").innerHTML += `
+                        <br><button onclick="startScanner()">🔄 Scan opnieuw</button>
+                    `;
+                }
             });
         }
 
